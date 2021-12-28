@@ -7,8 +7,9 @@ public class WhiskyMap : ClassMap<Whisky>
 {
     public WhiskyMap()
     {
-        Map(p => p.Name).Name("Whisky Name").Index(0).TypeConverter<TitleCaseConverter>();
-        Map(p => p.RegionStyle).Name("Whisky Region or Style").Index(1).TypeConverter<TitleCaseConverter>();
+        Map(p => p.Id).Name("Id").Index(0).TypeConverter<GuidConverter>();
+        Map(p => p.Name).Name("Whisky Name").Index(1).TypeConverter<TitleCaseConverter>();
+        Map(p => p.RegionStyle).Name("Whisky Region or Style").Index(2).TypeConverter<TitleCaseConverter>();
     }
 }
 
