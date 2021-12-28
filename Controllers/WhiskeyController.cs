@@ -58,7 +58,7 @@ public class WhiskyController : Controller
         if (string.IsNullOrWhiteSpace(whisky.Name)) return BadRequest("Whisky name is required");
         if (string.IsNullOrWhiteSpace(whisky.RegionStyle)) return BadRequest("Region or style is required");
 
-        _whiskyRepository.Add(whisky);
+        whisky = _whiskyRepository.Add(whisky);
         return CreatedAtAction(nameof(GetWhiskeyById), new { id = whisky.Id }, whisky);
     }
 

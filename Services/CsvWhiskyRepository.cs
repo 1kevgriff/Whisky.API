@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using CsvHelper;
 using CsvHelper.Configuration;
 
@@ -9,8 +10,8 @@ public class CsvWhiskyRepository : IWhiskyRepository
 
     public CsvWhiskyRepository(string csvPath)
     {
-        _whisky = ReadWhiskyFromCsv(csvPath).ToList();
         _csvPath = csvPath;
+        _whisky = ReadWhiskyFromCsv(csvPath).ToList();
     }
 
     private IEnumerable<Whisky> ReadWhiskyFromCsv(string csvPath)
@@ -25,7 +26,28 @@ public class CsvWhiskyRepository : IWhiskyRepository
 
         csvReader.Context.RegisterClassMap<WhiskyMap>();
 
-        return csvReader.GetRecords<Whisky>().DistinctBy(p => p.Name).ToList();
+        var results = csvReader.GetRecords<Whisky>().DistinctBy(p => p.Name).ToList();
+
+        // read all the ratings from disk
+        LoadRatings(results);
+
+        return results;
+    }
+
+    private void LoadRatings(List<Whisky> whiskyList)
+    {
+        var ratingFolder = Path.Combine(Path.GetDirectoryName(_csvPath), "ratings");
+        if (!Directory.Exists(ratingFolder)) Directory.CreateDirectory(ratingFolder);
+
+        foreach (var w in whiskyList)
+        {
+            var whiskyRatingJsonPath = Path.Combine(ratingFolder, $"{w.Id}.json");
+            if (File.Exists(whiskyRatingJsonPath))
+            {
+                var whiskyRatingJson = File.ReadAllText(whiskyRatingJsonPath);
+                w.Ratings = JsonSerializer.Deserialize<List<Rating>>(whiskyRatingJson);
+            }
+        }
     }
 
     private void SaveWhiskyListToCsv(string csvPath)
@@ -41,14 +63,23 @@ public class CsvWhiskyRepository : IWhiskyRepository
         csvWriter.Context.RegisterClassMap<WhiskyMap>();
         csvWriter.WriteRecords(_whisky);
         csvWriter.Flush();
+
+        foreach (var w in _whisky)
+        {
+            var whiskyRatingJsonPath = Path.Combine(Path.GetDirectoryName(csvPath), "ratings", $"{w.Id}.json");
+            var whiskyRatingJson = JsonSerializer.Serialize(w.Ratings);
+            File.WriteAllText(whiskyRatingJsonPath, whiskyRatingJson);
+        }
     }
 
-    public void Add(Whisky whisky)
+    public Whisky Add(Whisky whisky)
     {
         whisky.Id = Guid.NewGuid();
 
         _whisky.Add(whisky);
         SaveWhiskyListToCsv(_csvPath);
+        
+        return whisky;
     }
 
     public void Delete(Guid id)
@@ -59,6 +90,11 @@ public class CsvWhiskyRepository : IWhiskyRepository
 
     public IEnumerable<Whisky> GetAll(int pageNumber = 0, int pageSize = 100)
     {
+        if (pageNumber == -1 && pageSize == -1)
+        {
+            return _whisky;
+        }
+
         return _whisky.Skip(pageNumber * pageSize).Take(pageSize);
     }
 
@@ -70,5 +106,10 @@ public class CsvWhiskyRepository : IWhiskyRepository
         if (whiskyToUpdate == null) throw new KeyNotFoundException($"Whisky not found: {whisky.Name}");
         whiskyToUpdate.RegionStyle = whisky.RegionStyle;
         SaveWhiskyListToCsv(_csvPath);
+    }
+
+    public void AddRating(short stars, string message)
+    {
+
     }
 }
