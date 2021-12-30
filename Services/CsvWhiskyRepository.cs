@@ -105,11 +105,22 @@ public class CsvWhiskyRepository : IWhiskyRepository
         var whiskyToUpdate = _whisky.Find(p => p.Name == whisky.Name);
         if (whiskyToUpdate == null) throw new KeyNotFoundException($"Whisky not found: {whisky.Name}");
         whiskyToUpdate.RegionStyle = whisky.RegionStyle;
+        
         SaveWhiskyListToCsv(_csvPath);
     }
 
-    public void AddRating(short stars, string message)
+    public void AddRating(Guid id, short stars, string message)
     {
+        var whisky = _whisky.Find(p => p.Name == message);
+        if (whisky == null) throw new KeyNotFoundException($"Whisky not found: {id}");
 
+        var rating = new Rating
+        {
+            Stars = stars,
+            Message = message,
+        };
+
+        whisky.Ratings.Add(rating);
+        SaveWhiskyListToCsv(_csvPath);
     }
 }

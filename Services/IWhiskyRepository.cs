@@ -6,5 +6,5 @@ public interface IWhiskyRepository
     void Update(Whisky whisky);
     void Delete(Guid id);
 
-    void AddRating(short stars, string message);
+    void AddRating(Guid id, short stars, string message);
 }

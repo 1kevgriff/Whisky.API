@@ -62,6 +62,14 @@ public class WhiskyController : Controller
         return CreatedAtAction(nameof(GetWhiskeyById), new { id = whisky.Id }, whisky);
     }
 
+    [HttpPost("{id}/ratings")]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Rating))]
+    public IActionResult AddRating(Guid id, short stars, string message)
+    {
+        _whiskyRepository.AddRating(id, stars, message);
+        return CreatedAtAction(nameof(GetWhiskeyById), new { id }, whisky);
+    }
+
     /// <summary>
     /// Get a list of regions or styles from the database.
     /// </summary>
