@@ -8,10 +8,15 @@ using Microsoft.AspNetCore.Mvc;
 public class WhiskyController : Controller
 {
     private IWhiskyRepository _whiskyRepository;
+    private ILogger<WhiskyController> _logger;
+    private readonly INotificationService _notificationService;
 
-    public WhiskyController(IWhiskyRepository whiskyRepository)
+    public WhiskyController(IWhiskyRepository whiskyRepository, ILogger<WhiskyController> logger,
+        INotificationService notificationService)
     {
         _whiskyRepository = whiskyRepository;
+        _logger = logger;
+        this._notificationService = notificationService;
     }
 
     /// <summary>
@@ -24,6 +29,7 @@ public class WhiskyController : Controller
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Whisky>))]
     public IActionResult GetAllWhisky([FromQuery] int pageNumber = 0, [FromQuery] int pageSize = 100)
     {
+        _logger.LogInformation("Request for page {pageNumber} with page size {pageSize}", pageNumber, pageSize);
         var whiskies = _whiskyRepository.GetAll(pageNumber, pageSize);
         return Ok(whiskies);
     }
@@ -38,6 +44,7 @@ public class WhiskyController : Controller
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetWhiskeyById(Guid id)
     {
+        _logger.LogInformation("Request for whisky with id {id}", id);
         var whisky = _whiskyRepository.GetById(id);
         if (whisky == null) return NotFound();
 
@@ -52,22 +59,47 @@ public class WhiskyController : Controller
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Whisky))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public IActionResult Add([FromBody] Whisky whisky)
+    public async Task<IActionResult> AddAsync([FromBody] Whisky whisky)
     {
-        if (whisky == null) return BadRequest();
-        if (string.IsNullOrWhiteSpace(whisky.Name)) return BadRequest("Whisky name is required");
-        if (string.IsNullOrWhiteSpace(whisky.RegionStyle)) return BadRequest("Region or style is required");
+        _logger.LogInformation("Request to add whisky");
+
+        if (whisky == null)
+        {
+            _logger.LogError("No whisky body was provided");
+            return BadRequest();
+        }
+        if (string.IsNullOrWhiteSpace(whisky.Name))
+        {
+            _logger.LogError("No name was provided.");
+
+            return BadRequest("Whisky name is required");
+        }
+        if (string.IsNullOrWhiteSpace(whisky.RegionStyle))
+        {
+            _logger.LogError("No region style was provided.");
+
+            return BadRequest("Region or style is required");
+        }
 
         whisky = _whiskyRepository.Add(whisky);
+
+        await _notificationService.WhiskeyAdded(whisky);
+
         return CreatedAtAction(nameof(GetWhiskeyById), new { id = whisky.Id }, whisky);
     }
 
     [HttpPost("{id}/ratings")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Rating))]
-    public IActionResult AddRating(Guid id, short stars, string message)
+    public async Task<IActionResult> AddRatingAsync(Guid id, short stars, string message)
     {
+        _logger.LogInformation("Request to add rating to whisky with id {id}, rating {stars}", id, stars);
+
         _whiskyRepository.AddRating(id, stars, message);
-        return CreatedAtAction(nameof(GetWhiskeyById), new { id }, whisky);
+        var updatedWhisky = _whiskyRepository.GetById(id);
+
+        await _notificationService.RatingAdded(updatedWhisky, new Rating { Stars = stars, Message = message });
+
+        return CreatedAtAction(nameof(GetWhiskeyById), new { id }, updatedWhisky);
     }
 
     /// <summary>
@@ -78,6 +110,8 @@ public class WhiskyController : Controller
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<string>))]
     public IActionResult Regions()
     {
+        _logger.LogInformation("Request for regions");
+
         return Ok(_whiskyRepository.GetAll().Select(p => p.RegionStyle).Distinct().OrderBy(p => p));
     }
 }

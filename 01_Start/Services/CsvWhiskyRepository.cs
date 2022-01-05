@@ -111,7 +111,7 @@ public class CsvWhiskyRepository : IWhiskyRepository
 
     public void AddRating(Guid id, short stars, string message)
     {
-        var whisky = _whisky.Find(p => p.Name == message);
+        var whisky = _whisky.Find(p => p.Id.Equals(id));
         if (whisky == null) throw new KeyNotFoundException($"Whisky not found: {id}");
 
         var rating = new Rating
