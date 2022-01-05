@@ -20,7 +20,9 @@ builder.Services.AddSwaggerGen(options =>
 var whiskyPath = Path.Combine(Directory.GetCurrentDirectory(), "whisky.csv");
 builder.Services.AddTransient<IWhiskyRepository, CsvWhiskyRepository>(p => new CsvWhiskyRepository(whiskyPath));
 
-builder.Services.AddTransient<INotificationService, EmailNotificationService>(p => new EmailNotificationService("localhost", 1025, "foo", "fighter"));
+builder.Services
+    .AddTransient<INotificationService, EmailNotificationService>(p =>
+                            new EmailNotificationService("localhost", 1025, string.Empty, string.Empty, p.GetService<ILogger<EmailNotificationService>>()));
 
 var app = builder.Build();
 

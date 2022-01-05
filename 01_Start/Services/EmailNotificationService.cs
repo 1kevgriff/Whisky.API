@@ -10,8 +10,9 @@ public class EmailNotificationService : INotificationService
     private readonly int _smtpPort;
     private readonly string _smtpUsername;
     private readonly string _smtpPassword;
+    private readonly ILogger<EmailNotificationService> _logger;
 
-    public EmailNotificationService(string smtpHostname, int smtpPort, string smtpUserName, string smtpPassword)
+    public EmailNotificationService(string smtpHostname, int smtpPort, string smtpUserName, string smtpPassword, ILogger<EmailNotificationService> logger)
     {
         var folder = "Notifications";
         var fileName = "notifications.json";
@@ -31,6 +32,7 @@ public class EmailNotificationService : INotificationService
         this._smtpPort = smtpPort;
         this._smtpUsername = smtpUserName;
         this._smtpPassword = smtpPassword;
+        this._logger = logger;
     }
 
     public async Task RatingAdded(Whisky whisky, Rating rating)
@@ -52,17 +54,10 @@ public class EmailNotificationService : INotificationService
         var subject = "[Whisky API] New Whisky Added";
         var body = @$"Hey there!  We thought you'd like to know a new whisky has been added!  
                       It is named {whisky.Name} and is from the {whisky.RegionStyle} region.";
-        foreach (var notification in _notifications.Where(p => p.NotificationType == NotificationType.NEW_WHISKY))
-        {
-            // notify!
-            await SendEmail(notification.EmailAddress, subject, body);
-        }
-
-        subject = $"[Whisky API] New Whisky Added in {whisky.RegionStyle} Region";
-
-        foreach (var notification in _notifications.Where(p =>
-                                                    p.NotificationType == NotificationType.NEW_WHISKY_IN_REGION &&
-                                                    p.Region.Equals(whisky.RegionStyle, StringComparison.OrdinalIgnoreCase)))
+        foreach (var notification in
+                        _notifications.Where(p => p.NotificationType == NotificationType.NEW_WHISKY ||
+                            (p.NotificationType == NotificationType.NEW_WHISKY_IN_REGION &&
+                                                    p.Region.Equals(whisky.RegionStyle, StringComparison.OrdinalIgnoreCase))))
         {
             // notify!
             await SendEmail(notification.EmailAddress, subject, body);
@@ -73,9 +68,15 @@ public class EmailNotificationService : INotificationService
     private async Task SendEmail(string emailAddress, string subject, string body)
     {
         MailMessage mailMessage = new MailMessage("notifications@whiskyapi.com", emailAddress, subject, body);
-        SmtpClient client = new SmtpClient(_smtpHostName, _smtpPort);
-        client.Credentials = new NetworkCredential(_smtpUsername, _smtpPassword);
+        using (SmtpClient client = new SmtpClient(_smtpHostName, _smtpPort))
+        {
+            if (!string.IsNullOrWhiteSpace(_smtpUsername) && !string.IsNullOrWhiteSpace(_smtpPassword))
+            {
+                client.Credentials = new NetworkCredential(_smtpUsername, _smtpPassword);
+            }
 
-        await client.SendMailAsync(mailMessage);
+            _logger.LogInformation($"Sending email to {emailAddress} with subject {subject}");
+            await client.SendMailAsync(mailMessage);
+        }
     }
 }
