@@ -1,19 +1,15 @@
-using System;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Access the amazing world of Whisky.
+///     Access the amazing world of Whisky.
 /// </summary>
 [ApiController]
 [Route("whisky")]
 public class WhiskyController : Controller
 {
-    private IWhiskyRepository _whiskyRepository;
-    private ILogger<WhiskyController> _logger;
     private readonly INotificationService _notificationService;
+    private ILogger<WhiskyController> _logger;
+    private readonly IWhiskyRepository _whiskyRepository;
 
     public WhiskyController(IWhiskyRepository whiskyRepository,
         ILogger<WhiskyController> logger,
@@ -21,11 +17,11 @@ public class WhiskyController : Controller
     {
         _whiskyRepository = whiskyRepository;
         _logger = logger;
-        this._notificationService = notificationService;
+        _notificationService = notificationService;
     }
 
     /// <summary>
-    /// Returns all the whisky in the database.
+    ///     Returns all the whisky in the database.
     /// </summary>
     /// <param name="pageNumber">Which page number should the result return. Default is page 0.</param>
     /// <param name="pageSize">The number of elements returned in the page. Default is 100. </param>
@@ -39,7 +35,7 @@ public class WhiskyController : Controller
     }
 
     /// <summary>
-    /// Get a particular whisky by its id.
+    ///     Get a particular whisky by its id.
     /// </summary>
     /// <param name="id">Id of the whisky (GUID)</param>
     /// <returns>The requested whisky</returns>
@@ -55,7 +51,7 @@ public class WhiskyController : Controller
     }
 
     /// <summary>
-    /// Adds a new whisky to the database.
+    ///     Adds a new whisky to the database.
     /// </summary>
     /// <param name="whisky">The whisky to add</param>
     /// <returns>The newly created whisky</returns>
@@ -64,24 +60,15 @@ public class WhiskyController : Controller
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AddAsync([FromBody] Whisky whisky)
     {
-        if (whisky == null)
-        {
-            return BadRequest();
-        }
-        if (string.IsNullOrWhiteSpace(whisky.Name))
-        {
-            return BadRequest("Whisky name is required");
-        }
-        if (string.IsNullOrWhiteSpace(whisky.RegionStyle))
-        {
-            return BadRequest("Region or style is required");
-        }
+        if (whisky == null) return BadRequest();
+        if (string.IsNullOrWhiteSpace(whisky.Name)) return BadRequest("Whisky name is required");
+        if (string.IsNullOrWhiteSpace(whisky.RegionStyle)) return BadRequest("Region or style is required");
 
         whisky = _whiskyRepository.Add(whisky);
 
         await _notificationService.WhiskeyAdded(whisky);
 
-        return CreatedAtAction(nameof(GetWhiskeyById), new { id = whisky.Id }, whisky);
+        return CreatedAtAction(nameof(GetWhiskeyById), new {id = whisky.Id}, whisky);
     }
 
     [HttpPost("{id}/ratings")]
@@ -91,13 +78,13 @@ public class WhiskyController : Controller
         _whiskyRepository.AddRating(id, stars, message);
         var updatedWhisky = _whiskyRepository.GetById(id);
 
-        await _notificationService.RatingAdded(updatedWhisky, new Rating { Stars = stars, Message = message });
+        await _notificationService.RatingAdded(updatedWhisky, new Rating {Stars = stars, Message = message});
 
-        return CreatedAtAction(nameof(GetWhiskeyById), new { id }, updatedWhisky);
+        return CreatedAtAction(nameof(GetWhiskeyById), new {id}, updatedWhisky);
     }
 
     /// <summary>
-    /// Get a list of regions or styles from the database.
+    ///     Get a list of regions or styles from the database.
     /// </summary>
     /// <returns></returns>
     [HttpGet("regions")]

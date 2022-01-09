@@ -1,1 +1,6 @@
-[{"Stars":2,"Message":"It was a bad experience."},{"Stars":3,"Message":"Two thumbs up"},{"Stars":4,"Message":"This whisky is great!"},{"Stars":1,"Message":"This whisky is terrible."},{"Stars":3,"Message":"It was a great experience."},{"Stars":4,"Message":"This whisky is terrible."},{"Stars":1,"Message":"This whisky is awful."}]
+[
+  { "Stars": 2, "Message": "It was a bad experience." }, { "Stars": 3, "Message": "Two thumbs up" },
+  { "Stars": 4, "Message": "This whisky is great!" }, { "Stars": 1, "Message": "This whisky is terrible." },
+  { "Stars": 3, "Message": "It was a great experience." }, { "Stars": 4, "Message": "This whisky is terrible." },
+  { "Stars": 1, "Message": "This whisky is awful." }
+]

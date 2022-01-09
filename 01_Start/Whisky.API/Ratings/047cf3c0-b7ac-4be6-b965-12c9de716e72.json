@@ -1,1 +1,4 @@
-[{"Stars":1,"Message":"This whisky is terrible."},{"Stars":3,"Message":"It was a great experience."},{"Stars":3,"Message":"Aight."}]
+[
+  { "Stars": 1, "Message": "This whisky is terrible." }, { "Stars": 3, "Message": "It was a great experience." },
+  { "Stars": 3, "Message": "Aight." }
+]

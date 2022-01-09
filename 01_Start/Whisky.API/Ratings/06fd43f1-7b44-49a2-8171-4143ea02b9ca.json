@@ -1,1 +1,5 @@
-[{"Stars":2,"Message":"This whisky is great!"},{"Stars":1,"Message":"This whisky is ok."},{"Stars":1,"Message":"Tastes like motor oil."},{"Stars":1,"Message":"Two thumbs down"},{"Stars":4,"Message":"It was a good experience."},{"Stars":3,"Message":"This whisky is great!"}]
+[
+  { "Stars": 2, "Message": "This whisky is great!" }, { "Stars": 1, "Message": "This whisky is ok." },
+  { "Stars": 1, "Message": "Tastes like motor oil." }, { "Stars": 1, "Message": "Two thumbs down" },
+  { "Stars": 4, "Message": "It was a good experience." }, { "Stars": 3, "Message": "This whisky is great!" }
+]

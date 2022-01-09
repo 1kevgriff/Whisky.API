@@ -1,1 +1,4 @@
-[{"Stars":3,"Message":"Tastes like motor oil."},{"Stars":2,"Message":"Two thumbs up"},{"Stars":2,"Message":"Tastes like motor oil."},{"Stars":1,"Message":"Two thumbs up"}]
+[
+  { "Stars": 3, "Message": "Tastes like motor oil." }, { "Stars": 2, "Message": "Two thumbs up" },
+  { "Stars": 2, "Message": "Tastes like motor oil." }, { "Stars": 1, "Message": "Two thumbs up" }
+]

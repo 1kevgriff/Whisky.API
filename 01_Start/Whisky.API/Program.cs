@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Text.Json;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);

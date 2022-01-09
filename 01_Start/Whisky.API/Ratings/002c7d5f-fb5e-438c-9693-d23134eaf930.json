@@ -1,1 +1,4 @@
-[{"Stars":4,"Message":"One thumbs up"},{"Stars":1,"Message":"A\u002B\u002B\u002B will drink again"},{"Stars":3,"Message":"You can clean a bumper with this stuff."}]
+[
+  { "Stars": 4, "Message": "One thumbs up" }, { "Stars": 1, "Message": "A\u002B\u002B\u002B will drink again" },
+  { "Stars": 3, "Message": "You can clean a bumper with this stuff." }
+]

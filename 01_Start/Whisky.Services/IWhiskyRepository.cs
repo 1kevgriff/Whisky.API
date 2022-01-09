@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 public interface IWhiskyRepository
 {
     IEnumerable<Whisky> GetAll(int skip = 0, int take = 100);
