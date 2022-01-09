@@ -1,0 +1,16 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "345696dc-914a-4870-b576-623988fb50c4": {
+      "ProjectGuid": "345696dc-914a-4870-b576-623988fb50c4",
+      "DisplayName": "Whisky.Services",
+      "ColorIndex": 0
+    },
+    "e866c3ff-a7be-4298-bfea-7bb2979ac9ad": {
+      "ProjectGuid": "e866c3ff-a7be-4298-bfea-7bb2979ac9ad",
+      "DisplayName": "Whisky.API",
+      "ColorIndex": 1
+    }
+  },
+  "NextColorIndex": 2
+}
