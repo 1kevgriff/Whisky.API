@@ -19,9 +19,10 @@ builder.Services.AddSwaggerGen(options =>
 var whiskyPath = Path.Combine(Directory.GetCurrentDirectory(), "whisky.csv");
 builder.Services.AddTransient<IWhiskyRepository, CsvWhiskyRepository>(p => new CsvWhiskyRepository(whiskyPath));
 
+var notificationPath = Path.Combine(Directory.GetCurrentDirectory(), "Notifications", "notifications.json");
 builder 
     .Services
-    .AddSingleton(p => new EmailNotificationService(p.GetService<ISendEmailService>(), p.GetService<ILogger<EmailNotificationService>>()));
+    .AddSingleton(p => new EmailNotificationService(notificationPath, p.GetService<ISendEmailService>(), p.GetService<ILogger<EmailNotificationService>>()));
 
 var cloudConnectionString = "UseDevelopmentStorage=true";
 

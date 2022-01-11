@@ -14,21 +14,18 @@ public class EmailNotificationService : INotificationService
     private readonly ISendEmailService _sendEmailService;
     private readonly ILogger<EmailNotificationService> _logger;
 
-    public EmailNotificationService(ISendEmailService sendEmailService, ILogger<EmailNotificationService> logger)
+    public EmailNotificationService(string notificationFilePath, ISendEmailService sendEmailService, ILogger<EmailNotificationService> logger)
     {
-        var folder = "Notifications";
-        var fileName = "notifications.json";
-        _filePath = Path.Combine(Directory.GetCurrentDirectory(), folder, fileName);
-
         _notifications = new List<NotificationRequest>();
-        if (File.Exists(_filePath))
+        if (File.Exists(notificationFilePath))
         {
-            var json = File.ReadAllText(_filePath);
+            var json = File.ReadAllText(notificationFilePath);
             var deserialized = JsonSerializer.Deserialize<List<NotificationRequest>>(json);
 
             if (deserialized != null)
                 _notifications = deserialized;
         }
+
         _sendEmailService = sendEmailService;
         _logger = logger;
     }

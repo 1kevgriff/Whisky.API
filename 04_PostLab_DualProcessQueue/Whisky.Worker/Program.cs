@@ -1,9 +1,13 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 Console.WriteLine("Hello, World!");
+
+var notificationFile = "../../../../Whisky.API/Notifications/notifications.json";
+var notificationPath = new DirectoryInfo(notificationFile);
 
 var cloudConnectionString = "UseDevelopmentStorage=true";
 
@@ -13,7 +17,7 @@ var serviceProvider = new ServiceCollection()
         p.AddConsole();
     })
     .AddSingleton<QueuedNotificationService>(p=> new QueuedNotificationService(cloudConnectionString, p.GetService<EmailNotificationService>(), p.GetService<ILogger<EmailNotificationService>>()))
-    .AddSingleton(p => new EmailNotificationService(p.GetService<ISendEmailService>(), p.GetService<ILogger<EmailNotificationService>>()))
+    .AddSingleton(p => new EmailNotificationService(notificationPath.FullName, p.GetService<ISendEmailService>(), p.GetService<ILogger<EmailNotificationService>>()))
     .AddSingleton<ISendEmailService, SmtpSendEmailService>(
         p => new SmtpSendEmailService(cloudConnectionString, "localhost", 1025, "", "", p.GetService<ILogger<SmtpSendEmailService>>()))
     .BuildServiceProvider();
@@ -29,7 +33,6 @@ logger.LogInformation("Starting worker tasks");
 
 var notificationWorker = Task.Run(() => queuedNotificationService!.ProcessQueue(workerCancellationTokenSource.Token));
 var sendEmailWorkers = Task.Run(() => sendEmailService!.ProcessQueue(workerCancellationTokenSource.Token));
-
 
 var resetEvent = new ManualResetEvent(false);
 do
