@@ -78,7 +78,7 @@ public static class DemoPrep
         var regions = allWhisky.Select(p => p.RegionStyle).OrderBy(p => p).Distinct().ToList();
 
         var notifications = new List<NotificationRequest>();
-        for (int x = 0; x < 100000; x++)
+        for (int x = 0; x < 10000; x++)
         {
             var r = random.Next(0, 3);
 

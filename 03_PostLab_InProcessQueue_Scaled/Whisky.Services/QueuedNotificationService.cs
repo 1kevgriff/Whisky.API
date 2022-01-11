@@ -26,7 +26,7 @@ public class QueuedNotificationService : INotificationService
         _queue.Add((whisky, rating));
     }
 
-    public async Task ProcessItem(CancellationToken cancellationToken)
+    public async Task ProcessQueue(CancellationToken cancellationToken)
     {
         foreach (var item in _queue.GetConsumingEnumerable(cancellationToken))
         {
@@ -46,4 +46,13 @@ public class QueuedNotificationService : INotificationService
         _queue.CompleteAdding();
         return Task.CompletedTask;
     }
+}
+
+
+public interface ISendEmailService
+{
+    void QueueEmail(OutgoingEmailMessage outgoingEmailMessage);
+    Task ProcessQueue(CancellationToken cancellationToken);
+    Task ProcessErrorQueue(CancellationToken cancellationToken);
+    Task StopProcessing();
 }

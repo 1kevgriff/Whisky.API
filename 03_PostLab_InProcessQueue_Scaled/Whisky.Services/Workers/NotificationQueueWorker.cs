@@ -26,7 +26,7 @@ public class NotificationQueueWorker : IHostedService
         _logger.LogInformation("Background notification queue processing starting");
         _workerCancellationTokenSource = new CancellationTokenSource();
 
-        _worker = Task.Run(() => _queuedNotificationService.ProcessItem(_workerCancellationTokenSource.Token), cancellationToken);
+        _worker = Task.Run(() => _queuedNotificationService.ProcessQueue(_workerCancellationTokenSource.Token), cancellationToken);
 
         return Task.CompletedTask;
     }

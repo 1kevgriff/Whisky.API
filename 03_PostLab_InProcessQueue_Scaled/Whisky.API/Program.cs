@@ -19,15 +19,20 @@ builder.Services.AddSwaggerGen(options =>
 var whiskyPath = Path.Combine(Directory.GetCurrentDirectory(), "whisky.csv");
 builder.Services.AddTransient<IWhiskyRepository, CsvWhiskyRepository>(p => new CsvWhiskyRepository(whiskyPath));
 
-builder
+builder 
     .Services
-    .AddSingleton(p => new EmailNotificationService("localhost", 1025, string.Empty, string.Empty, p.GetService<ILogger<EmailNotificationService>>()));
+    .AddSingleton(p => new EmailNotificationService(p.GetService<ISendEmailService>(), p.GetService<ILogger<EmailNotificationService>>()));
 
 builder.Services.AddSingleton<QueuedNotificationService>();
+
 builder.Services.AddSingleton<INotificationService>(configure =>
     configure.GetService<QueuedNotificationService>());
 
+builder.Services.AddSingleton<ISendEmailService, SmtpSendEmailService>(
+    p => new SmtpSendEmailService("localhost", 1025, "", "", p.GetService<ILogger<SmtpSendEmailService>>()));
+
 builder.Services.AddHostedService<NotificationQueueWorker>();
+builder.Services.AddHostedService<SendEmailQueueWorker>();
 
 var app = builder.Build();
 

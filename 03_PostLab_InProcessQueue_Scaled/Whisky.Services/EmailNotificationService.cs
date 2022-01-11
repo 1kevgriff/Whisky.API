@@ -11,9 +11,10 @@ public class EmailNotificationService : INotificationService
     private readonly int _smtpPort;
     private readonly string _smtpUsername;
     private readonly string _smtpPassword;
+    private readonly ISendEmailService _sendEmailService;
     private readonly ILogger<EmailNotificationService> _logger;
 
-    public EmailNotificationService(string smtpHostname, int smtpPort, string smtpUserName, string smtpPassword, ILogger<EmailNotificationService> logger)
+    public EmailNotificationService(ISendEmailService sendEmailService, ILogger<EmailNotificationService> logger)
     {
         var folder = "Notifications";
         var fileName = "notifications.json";
@@ -28,11 +29,7 @@ public class EmailNotificationService : INotificationService
             if (deserialized != null)
                 _notifications = deserialized;
         }
-
-        _smtpHostName = smtpHostname;
-        _smtpPort = smtpPort;
-        _smtpUsername = smtpUserName;
-        _smtpPassword = smtpPassword;
+        _sendEmailService = sendEmailService;
         _logger = logger;
     }
 
@@ -45,8 +42,15 @@ public class EmailNotificationService : INotificationService
 
         foreach (var notification in _notifications.Where(p => p.NotificationType == NotificationType.NEW_RATING))
         {
+            var newOutgoingMessage = new OutgoingEmailMessage()
+            {
+                Body = body,
+                Subject = subject,
+                To = notification.EmailAddress
+            };
+
             // notify!
-            await SendEmail(notification.EmailAddress, subject, body);
+            _sendEmailService.QueueEmail(newOutgoingMessage);
         }
     }
 
@@ -60,24 +64,15 @@ public class EmailNotificationService : INotificationService
                             (p.NotificationType == NotificationType.NEW_WHISKY_IN_REGION &&
                                                     p.Region.Equals(whisky.RegionStyle, StringComparison.OrdinalIgnoreCase))))
         {
-            // notify!
-            await SendEmail(notification.EmailAddress, subject, body);
-        }
-    }
-
-
-    private async Task SendEmail(string emailAddress, string subject, string body)
-    {
-        MailMessage mailMessage = new MailMessage("notifications@whiskyapi.com", emailAddress, subject, body);
-        using (SmtpClient client = new SmtpClient(_smtpHostName, _smtpPort))
-        {
-            if (!string.IsNullOrWhiteSpace(_smtpUsername) && !string.IsNullOrWhiteSpace(_smtpPassword))
+            var newOutgoingMessage = new OutgoingEmailMessage()
             {
-                client.Credentials = new NetworkCredential(_smtpUsername, _smtpPassword);
-            }
+                Body = body,
+                Subject = subject,
+                To = notification.EmailAddress
+            };
 
-            _logger.LogInformation($"Sending email to {emailAddress} with subject {subject}");
-            await client.SendMailAsync(mailMessage);
+            // notify!
+            _sendEmailService.QueueEmail(newOutgoingMessage);
         }
     }
 }
