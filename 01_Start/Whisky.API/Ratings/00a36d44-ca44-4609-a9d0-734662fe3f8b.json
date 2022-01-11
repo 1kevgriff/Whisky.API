@@ -1,0 +1,5 @@
+[
+  { "Stars": 3, "Message": "This whisky is not good." }, { "Stars": 1, "Message": "This whisky is not good." },
+  { "Stars": 1, "Message": "One thumbs up" }, { "Stars": 4, "Message": "Two thumbs up" },
+  { "Stars": 3, "Message": "Tastes like motor oil." }, { "Stars": 4, "Message": "This whisky is great!" }
+]

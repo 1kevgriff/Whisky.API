@@ -1,0 +1,6 @@
+[
+  { "Stars": 3, "Message": "Two thumbs down" }, { "Stars": 2, "Message": "I\u0027m not a fan of this whisky." },
+  { "Stars": 1, "Message": "Two thumbs up" }, { "Stars": 3, "Message": "One thumbs up" },
+  { "Stars": 2, "Message": "One thumbs up" }, { "Stars": 4, "Message": "I\u0027m a fan of this whisky." },
+  { "Stars": 1, "Message": "You can clean a bumper with this stuff." }
+]
