@@ -7,11 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Whisky.API", "Whisky.API\Wh
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Whisky.Services", "Whisky.Services\Whisky.Services.csproj", "{345696DC-914A-4870-B576-623988FB50C4}"
 EndProject
-<<<<<<< HEAD
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Whisky.Worker", "Whisky.Worker\Whisky.Worker.csproj", "{5BDB7440-8E2C-4971-98CF-BD3C3AF915CA}"
-=======
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Whisky.Worker", "Whisky.Worker\Whisky.Worker.csproj", "{5BDB7440-8E2C-4971-98CF-BD3C3AF915CA}"
->>>>>>> 8b62371c875c5972d89fdcc448a92bb2e59dbab6
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
