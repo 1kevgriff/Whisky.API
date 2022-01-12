@@ -2,7 +2,7 @@ using System.Text.Json;
 
 public static class DemoPrep
 {
-    public static void PrepareRatings(string ratingFolder, IWhiskyRepository? whiskyRepo, ILogger logger)
+    public static void PrepareRatings(string ratingFolder, IWhiskyRepository whiskyRepo, ILogger logger)
     {
         if (Directory.Exists(ratingFolder))
             return;
@@ -37,7 +37,7 @@ public static class DemoPrep
                     "One thumbs down",
                 };
 
-        foreach (var w in whiskyRepo.GetAll(-1, -1))
+        foreach (var w in whiskyRepo.GetAll(-1, -1) ?? new List<Whisky>())
         {
             logger.LogInformation($"Generating ratings for {w.Name}");
 
@@ -60,7 +60,7 @@ public static class DemoPrep
         }
     }
 
-    public static void PrepareNotifications(string notificationFolder, IWhiskyRepository? whiskyRepository, ILogger logger)
+    public static void PrepareNotifications(string notificationFolder, IWhiskyRepository whiskyRepository, ILogger logger)
     {
         if (Directory.Exists(notificationFolder))
             return;

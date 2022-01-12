@@ -45,9 +45,9 @@ public class WhiskyController : Controller
     public IActionResult GetWhiskeyById(Guid id)
     {
         var whisky = _whiskyRepository.GetById(id);
-        if (whisky == null) return NotFound();
-
-        return Ok(whisky);
+        return whisky == null 
+            ? NotFound() 
+            : Ok(whisky);
     }
 
     /// <summary>
@@ -77,6 +77,8 @@ public class WhiskyController : Controller
     {
         _whiskyRepository.AddRating(id, stars, message);
         var updatedWhisky = _whiskyRepository.GetById(id);
+        if (updatedWhisky is null)
+            throw new ArgumentNullException(nameof(updatedWhisky));
 
         await _notificationService.RatingAdded(updatedWhisky, new Rating {Stars = stars, Message = message});
 

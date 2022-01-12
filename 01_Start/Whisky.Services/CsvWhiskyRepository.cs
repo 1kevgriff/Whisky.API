@@ -8,7 +8,7 @@ public class CsvWhiskyRepository : IWhiskyRepository
     private List<Whisky> _whisky = new List<Whisky>();
     private readonly string _csvPath;
 
-    public CsvWhiskyRepository(string csvPath)
+    public CsvWhiskyRepository(string csvPath = "")
     {
         _csvPath = csvPath;
         _whisky = ReadWhiskyFromCsv(csvPath).ToList();
@@ -36,7 +36,7 @@ public class CsvWhiskyRepository : IWhiskyRepository
 
     private void LoadRatings(List<Whisky> whiskyList)
     {
-        var ratingFolder = Path.Combine(Path.GetDirectoryName(_csvPath), "ratings");
+        var ratingFolder = Path.Combine(Path.GetDirectoryName(_csvPath) ?? String.Empty, "ratings");
         if (!Directory.Exists(ratingFolder)) Directory.CreateDirectory(ratingFolder);
 
         foreach (var w in whiskyList)
@@ -45,12 +45,12 @@ public class CsvWhiskyRepository : IWhiskyRepository
             if (File.Exists(whiskyRatingJsonPath))
             {
                 var whiskyRatingJson = File.ReadAllText(whiskyRatingJsonPath);
-                w.Ratings = JsonSerializer.Deserialize<List<Rating>>(whiskyRatingJson);
+                w.Ratings = JsonSerializer.Deserialize<List<Rating>>(whiskyRatingJson) ?? new List<Rating>();
             }
         }
     }
 
-    private void SaveWhiskyListToCsv(string csvPath)
+    private void SaveWhiskyListToCsv(string csvPath = "")
     {
         using var streamWriter = new StreamWriter(csvPath);
 
@@ -66,7 +66,7 @@ public class CsvWhiskyRepository : IWhiskyRepository
 
         foreach (var w in _whisky)
         {
-            var whiskyRatingJsonPath = Path.Combine(Path.GetDirectoryName(csvPath), "ratings", $"{w.Id}.json");
+            var whiskyRatingJsonPath = Path.Combine(Path.GetDirectoryName(csvPath) ?? String.Empty, "ratings", $"{w.Id}.json");
             var whiskyRatingJson = JsonSerializer.Serialize(w.Ratings);
             File.WriteAllText(whiskyRatingJsonPath, whiskyRatingJson);
         }
@@ -92,12 +92,8 @@ public class CsvWhiskyRepository : IWhiskyRepository
 
     public IEnumerable<Whisky> GetAll(int skip = 0, int take = 100)
     {
-        if (skip == -1 && take == -1)
-        {
-            return _whisky;
-        }
-
-        return _whisky.Skip(skip).Take(take);
+        return skip == -1 && take == -1 
+            ? _whisky : _whisky.Skip(skip).Take(take);
     }
 
     public Whisky? GetById(Guid id) => _whisky.FirstOrDefault(p => p.Id.Equals(id));
