@@ -21,7 +21,7 @@ builder.Services.AddTransient<IWhiskyRepository, CsvWhiskyRepository>(p => new C
 
 builder.Services
     .AddTransient<INotificationService, EmailNotificationService>(p =>
-                            new EmailNotificationService("localhost", 1025, string.Empty, string.Empty, p.GetService<ILogger<EmailNotificationService>>()));
+        new EmailNotificationService("localhost", 1025, string.Empty, string.Empty, p.GetRequiredService<ILogger<EmailNotificationService>>()));
 
 var app = builder.Build();
 
@@ -51,11 +51,11 @@ app.Use(async (context, next) =>
 // demo prep stuff if it's not already there
 using (var scope = app.Services.CreateScope())
 {
-    var ratingFolder = Path.Combine(Path.GetDirectoryName(whiskyPath), "Ratings");
-    DemoPrep.PrepareRatings(ratingFolder, scope.ServiceProvider.GetService<IWhiskyRepository>(), app.Logger);
+    var ratingFolder = Path.Combine(Path.GetDirectoryName(whiskyPath) ?? String.Empty, "Ratings");
+    DemoPrep.PrepareRatings(ratingFolder, scope.ServiceProvider.GetRequiredService<IWhiskyRepository>(), app.Logger);
 
-    var notificationFolder = Path.Combine(Path.GetDirectoryName(whiskyPath), "Notifications");
-    DemoPrep.PrepareNotifications(notificationFolder, scope.ServiceProvider.GetService<IWhiskyRepository>(), app.Logger);
+    var notificationFolder = Path.Combine(Path.GetDirectoryName(whiskyPath) ?? String.Empty, "Notifications");
+    DemoPrep.PrepareNotifications(notificationFolder, scope.ServiceProvider.GetRequiredService<IWhiskyRepository>(), app.Logger);
 }
 
 app.Run();

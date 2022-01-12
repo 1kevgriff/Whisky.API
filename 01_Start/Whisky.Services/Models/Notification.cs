@@ -1,9 +1,9 @@
 public class NotificationRequest
 {
-    public string EmailAddress { get; set; }
+    public string EmailAddress { get; set; } = String.Empty;
     public NotificationType NotificationType { get; set; }
     public string Region { get; set; } = "All"; // use "all" for all regions
-    public string WhiskyId { get; set; }
+    public string WhiskyId { get; set; } = String.Empty;
 }
 
 public enum NotificationType
