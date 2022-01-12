@@ -69,8 +69,10 @@ public class QueuedNotificationService : INotificationService
                             notification.Value.PopReceipt, cancellationToken);
                     }
                 }
-                catch
+                catch(Exception ex)
                 {
+                    _logger.LogError(ex, "Unable to process queued whisky notification due to {Exception}, will retry.\r\n" +
+                                           "{Exception.Message}", ex.GetBaseException().GetType().Name, ex.Message);
                     // auto re-queued
                 }
             }
@@ -90,8 +92,11 @@ public class QueuedNotificationService : INotificationService
                             rating.Value.PopReceipt, cancellationToken);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    _logger.LogWarning(ex, "Unable to process queued rating notification due to {Exception}, will retry.\r\n" +
+                                           "{Exception.Message}", ex.GetBaseException().GetType().Name, ex.Message);
+
                     // auto re-queued
                 }
             }

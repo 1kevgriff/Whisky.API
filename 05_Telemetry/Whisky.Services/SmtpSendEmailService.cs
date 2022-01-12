@@ -69,7 +69,7 @@ public class SmtpSendEmailService : ISendEmailService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unable to send email due to {Exception}\r\n" +
+                _logger.LogError(ex, "Unable to send email due to {Exception}, will retry\r\n" +
                                      "attempt {Email.Attempts}", ex.GetBaseException().GetType(), item.Attempts);
 
                 // auto re-queue
