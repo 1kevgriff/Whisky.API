@@ -44,10 +44,13 @@ public class WhiskyController : Controller
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetWhiskeyById(Guid id)
     {
-        var whisky = _whiskyRepository.GetById(id);
-        if (whisky == null) return NotFound();
+        using (_logger.BeginWhiskyScope(id))
+        {
+            var whisky = _whiskyRepository.GetById(id);
+            if (whisky == null) return NotFound();
 
-        return Ok(whisky);
+            return Ok(whisky);
+        }
     }
 
     /// <summary>
@@ -68,19 +71,22 @@ public class WhiskyController : Controller
 
         await _notificationService.WhiskeyAdded(whisky);
 
-        return CreatedAtAction(nameof(GetWhiskeyById), new {id = whisky.Id}, whisky);
+        return CreatedAtAction(nameof(GetWhiskeyById), new { id = whisky.Id }, whisky);
     }
 
     [HttpPost("{id}/ratings")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Rating))]
     public async Task<IActionResult> AddRatingAsync(Guid id, short stars, string message)
     {
-        _whiskyRepository.AddRating(id, stars, message);
-        var updatedWhisky = _whiskyRepository.GetById(id);
+        using (_logger.BeginWhiskyScope(id))
+        {
+            _whiskyRepository.AddRating(id, stars, message);
+            var updatedWhisky = _whiskyRepository.GetById(id);
 
-        await _notificationService.RatingAdded(updatedWhisky, new Rating {Stars = stars, Message = message});
+            await _notificationService.RatingAdded(updatedWhisky, new Rating { Stars = stars, Message = message });
 
-        return CreatedAtAction(nameof(GetWhiskeyById), new {id}, updatedWhisky);
+            return CreatedAtAction(nameof(GetWhiskeyById), new { id }, updatedWhisky);
+        }
     }
 
     /// <summary>

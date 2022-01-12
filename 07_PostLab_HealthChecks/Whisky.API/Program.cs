@@ -1,4 +1,7 @@
 using System.Reflection;
+using Loupe.Agent.AspNetCore;
+using Loupe.Agent.Core.Services;
+using Loupe.Extensions.Logging;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -10,7 +13,14 @@ var whiskyPath = Path.Combine(Directory.GetCurrentDirectory(), "whisky.csv");
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.AddLoupe();
+
 // Add services to the container.
+builder.Services.AddLoupe(config =>
+{
+    config.Publisher.ProductName = "Whisky";
+    config.Publisher.ApplicationName = "API";
+}).AddAspNetCoreDiagnostics();
 
 var healthChecksBuilder = builder.Services.AddHealthChecks();
 healthChecksBuilder.AddAzureQueueStorage(cloudConnectionString, "whisky-notifications-new", "Notification queue: New");
@@ -20,6 +30,7 @@ healthChecksBuilder.AddCheck("Does Whisky.csv exist", () => File.Exists(whiskyPa
 healthChecksBuilder.AddCheck("Does Notifications.json exist", () => File.Exists(notificationPath) ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy("File is missing"));
 
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -30,8 +41,10 @@ builder.Services.AddSwaggerGen(options =>
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 
-builder.Services.AddTransient<IWhiskyRepository, CsvWhiskyRepository>(p => new CsvWhiskyRepository(whiskyPath));
+var whiskyPath = Path.Combine(Directory.GetCurrentDirectory(), "whisky.csv");
+builder.Services.AddTransient<IWhiskyRepository, CsvWhiskyRepository>(p => new CsvWhiskyRepository(whiskyPath, p.GetService<ILogger<IWhiskyRepository>>()));
 
+var notificationPath = Path.Combine(Directory.GetCurrentDirectory(), "Notifications", "notifications.json");
 builder 
     .Services
     .AddSingleton(p => new EmailNotificationService(notificationPath, p.GetService<ISendEmailService>(), p.GetService<ILogger<EmailNotificationService>>()));

@@ -1,22 +1,30 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using Loupe.Agent.Core.Services;
+using Loupe.Extensions.Logging;
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-Console.WriteLine("Hello, World!");
+Console.WriteLine("Starting Whisky Worker");
 
 var notificationFile = "../../../../Whisky.API/Notifications/notifications.json";
 var notificationPath = new DirectoryInfo(notificationFile);
 
 var cloudConnectionString = "UseDevelopmentStorage=true";
 
-var serviceProvider = new ServiceCollection()
-    .AddLogging(p =>    
+var services = new ServiceCollection();
+    services.AddLogging(p =>
     {
-        p.AddConsole();
+        p.AddSimpleConsole();
+        p.AddLoupe();
     })
-    .AddSingleton<QueuedNotificationService>(p=> new QueuedNotificationService(cloudConnectionString, p.GetService<EmailNotificationService>(), p.GetService<ILogger<EmailNotificationService>>()))
+    .AddLoupe(config =>
+    {
+        config.Publisher.ProductName = "Whisky";
+        config.Publisher.ApplicationName = "API";
+    })
+	.AddSingleton<QueuedNotificationService>(p=> new QueuedNotificationService(cloudConnectionString, p.GetService<EmailNotificationService>(), p.GetService<ILogger<EmailNotificationService>>()))
     .AddSingleton(p => new EmailNotificationService(notificationPath.FullName, p.GetService<ISendEmailService>(), p.GetService<ILogger<EmailNotificationService>>()))
     .AddSingleton<ISendEmailService, SmtpSendEmailService>(
         p => new SmtpSendEmailService(cloudConnectionString, "localhost", 1025, "", "", p.GetService<ILogger<SmtpSendEmailService>>()))

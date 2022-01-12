@@ -1,5 +1,1 @@
-[
-  { "Stars": 1, "Message": "Two thumbs up" }, { "Stars": 3, "Message": "Two thumbs down" },
-  { "Stars": 3, "Message": "You can clean a bumper with this stuff." }, { "Stars": 1, "Message": "Two thumbs up" },
-  { "Stars": 4, "Message": "Two thumbs up" }
-]
+[{"Stars":1,"Message":"Two thumbs up"},{"Stars":3,"Message":"Two thumbs down"},{"Stars":3,"Message":"You can clean a bumper with this stuff."},{"Stars":1,"Message":"Two thumbs up"},{"Stars":4,"Message":"Two thumbs up"}]
