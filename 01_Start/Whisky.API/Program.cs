@@ -21,7 +21,7 @@ builder.Services.AddTransient<IWhiskyRepository, CsvWhiskyRepository>(p => new C
 
 builder.Services
     .AddTransient<INotificationService, EmailNotificationService>(p =>
-                            new EmailNotificationService("20.80.38.122", 1025, string.Empty, string.Empty, p.GetService<ILogger<EmailNotificationService>>()));
+                            new EmailNotificationService("localhost", 1025, string.Empty, string.Empty, p.GetService<ILogger<EmailNotificationService>>()));
 
 var app = builder.Build();
 
