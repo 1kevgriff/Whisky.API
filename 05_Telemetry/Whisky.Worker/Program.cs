@@ -1,5 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using Loupe.Agent.Core.Services;
+using Loupe.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -7,12 +9,19 @@ Console.WriteLine("Starting Whisky Worker");
 
 var cloudConnectionString = "UseDevelopmentStorage=true";
 
-var serviceProvider = new ServiceCollection()
-    .AddLogging(p =>
+var services = new ServiceCollection();
+    services.AddLogging(p =>
     {
-        p.AddConsole();
+        p.AddSimpleConsole();
+        p.AddLoupe();
     })
-    .AddSingleton<QueuedNotificationService>(p=> new QueuedNotificationService(cloudConnectionString, p.GetService<EmailNotificationService>(), p.GetService<ILogger<EmailNotificationService>>()))
+    .AddLoupe(config =>
+    {
+        config.Publisher.ProductName = "Whisky";
+        config.Publisher.ApplicationName = "API";
+    });
+
+var serviceProvider =  services.AddSingleton<QueuedNotificationService>(p=> new QueuedNotificationService(cloudConnectionString, p.GetService<EmailNotificationService>(), p.GetService<ILogger<EmailNotificationService>>()))
     .AddSingleton(p => new EmailNotificationService(p.GetService<ISendEmailService>(), p.GetService<ILogger<EmailNotificationService>>()))
     .AddSingleton<ISendEmailService, SmtpSendEmailService>(
         p => new SmtpSendEmailService(cloudConnectionString, "localhost", 1025, "", "", p.GetService<ILogger<SmtpSendEmailService>>()))

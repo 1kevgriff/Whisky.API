@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 
 public class SmtpSendEmailService : ISendEmailService
 {
-    private readonly string _cloudConnectionString;
     private readonly string _smtpHostName;
     private readonly int _smtpPort;
     private readonly string _smtpUserName;
@@ -21,7 +20,6 @@ public class SmtpSendEmailService : ISendEmailService
 
     public SmtpSendEmailService(string cloudConnectionString, string smtpHostName, int smtpPort, string smtpUserName, string smtpPassword, ILogger<SmtpSendEmailService> logger)
     {
-        _cloudConnectionString = cloudConnectionString;
         _smtpHostName = smtpHostName;
         _smtpPort = smtpPort;
         _smtpUserName = smtpUserName;
@@ -34,37 +32,45 @@ public class SmtpSendEmailService : ISendEmailService
 
     public async Task QueueEmail(OutgoingEmailMessage outgoingEmailMessage)
     {
+        _logger.LogInformation("Queuing Email to {Email.Address}", outgoingEmailMessage.To);
+
         await _queue.SendMessageAsync(JsonSerializer.Serialize(outgoingEmailMessage));
     }
 
     public async Task ProcessQueue(CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Starting SMTP Send Email Service Processing");
+
         while (!cancellationToken.IsCancellationRequested)
         {
             var dequeued = await _queue.ReceiveMessageAsync(null, cancellationToken);
             if (dequeued == null || dequeued.Value == null) continue;
 
+            using var scope = _logger.BeginQueueMessageScope(dequeued);
+
             var item = JsonSerializer.Deserialize<OutgoingEmailMessage>(dequeued.Value.MessageText);
 
+            using var emailScope = _logger.BeginEmailScope(item);
             try
             {
-                MailMessage mailMessage =
+                var mailMessage =
                     new MailMessage("notifications@whiskyapi.com", item.To, item.Subject, item.Body);
-                using SmtpClient client = new SmtpClient(_smtpHostName, _smtpPort);
+                using var client = new SmtpClient(_smtpHostName, _smtpPort);
 
                 if (!string.IsNullOrWhiteSpace(_smtpUserName) && !string.IsNullOrWhiteSpace(_smtpPassword))
                 {
                     client.Credentials = new NetworkCredential(_smtpUserName, _smtpPassword);
                 }
 
-                _logger.LogInformation($"Sending email to {item.To} with subject {item.Subject}");
+                _logger.LogInformation("Sending email to {Email.Address}.", item.To);
                 await client.SendMailAsync(mailMessage, cancellationToken);
 
                 await _queue.DeleteMessageAsync(dequeued.Value.MessageId, dequeued.Value.PopReceipt, cancellationToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error sending email - attempt {item.Attempts}");
+                _logger.LogError(ex, "Unable to send email due to {Exception}\r\n" +
+                                     "attempt {Email.Attempts}", ex.GetBaseException().GetType(), item.Attempts);
 
                 // auto re-queue
             }
@@ -72,6 +78,7 @@ public class SmtpSendEmailService : ISendEmailService
     }
     public Task StopProcessing()
     {
+        _logger.LogInformation("Shutting down SMTP Send Email Service");
         return Task.CompletedTask;
     }
 }

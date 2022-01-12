@@ -36,6 +36,7 @@ public class QueuedNotificationService : INotificationService
 
     public async Task WhiskeyAdded(Whisky whisky)
     {
+        _logger.LogInformation("Queuing Whisky Added Event to Notification Service");
         var messageText = JsonSerializer.Serialize(whisky);
 
         await _notificationQueue.SendMessageAsync(messageText);
@@ -43,6 +44,7 @@ public class QueuedNotificationService : INotificationService
 
     public async Task RatingAdded(Whisky whisky, Rating rating)
     {
+        _logger.LogInformation("Queuing Whisky Rating Added Event to Notification Service");
         var messageText = JsonSerializer.Serialize((whisky, rating), jsonSerializerOptions);
 
         await _notificationRatingQueue.SendMessageAsync(messageText);
@@ -53,14 +55,19 @@ public class QueuedNotificationService : INotificationService
         while (!cancellationToken.IsCancellationRequested)
         {
             var notification = await _notificationQueue.ReceiveMessageAsync(null, cancellationToken);
+            using var scope = _logger.BeginQueueMessageScope(notification);
             if (notification?.Value != null)
             {
                 try
                 {
                     var deserializedWhisky = JsonSerializer.Deserialize<Whisky>(notification.Value.MessageText);
-                    await _emailNotificationService.WhiskeyAdded(deserializedWhisky);
+                    using (_logger.BeginWhiskyScope(deserializedWhisky.Id))
+                    {
+                        await _emailNotificationService.WhiskeyAdded(deserializedWhisky);
 
-                    await _notificationQueue.DeleteMessageAsync(notification.Value.MessageId, notification.Value.PopReceipt, cancellationToken);
+                        await _notificationQueue.DeleteMessageAsync(notification.Value.MessageId,
+                            notification.Value.PopReceipt, cancellationToken);
+                    }
                 }
                 catch
                 {
@@ -75,9 +82,13 @@ public class QueuedNotificationService : INotificationService
                 {
                     var deserialized =
                         JsonSerializer.Deserialize<(Whisky, Rating)>(rating.Value.MessageText, jsonSerializerOptions);
-                    await _emailNotificationService.RatingAdded(deserialized.Item1, deserialized.Item2);
+                    using (_logger.BeginWhiskyScope(deserialized.Item1.Id))
+                    {
+                        await _emailNotificationService.RatingAdded(deserialized.Item1, deserialized.Item2);
 
-                    await _notificationRatingQueue.DeleteMessageAsync(rating.Value.MessageId, rating.Value.PopReceipt, cancellationToken);
+                        await _notificationRatingQueue.DeleteMessageAsync(rating.Value.MessageId,
+                            rating.Value.PopReceipt, cancellationToken);
+                    }
                 }
                 catch
                 {

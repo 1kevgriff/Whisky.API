@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Mail;
 using System.Text.Json;
@@ -35,11 +36,15 @@ public class EmailNotificationService : INotificationService
 
     public async Task RatingAdded(Whisky whisky, Rating rating)
     {
+        _logger.LogInformation("Generating notifications for Rating Added");
+
         var subject = "[Whisky API] New Rating Added";
         var body = @$"Hey there!  We thought you'd like to know a new rating has been added for {whisky.Name}!  
 
                       It was given a {rating.Stars} star rating with the following message: {rating.Message}";
 
+        var notificationsGenerated = 0;
+        var timer = Stopwatch.StartNew();
         foreach (var notification in _notifications.Where(p => p.NotificationType == NotificationType.NEW_RATING))
         {
             var newOutgoingMessage = new OutgoingEmailMessage()
@@ -51,18 +56,27 @@ public class EmailNotificationService : INotificationService
 
             // notify!
             await _sendEmailService.QueueEmail(newOutgoingMessage);
+            notificationsGenerated++;
         }
+
+        timer.Stop();
+        _logger.LogInformation("Completed generating {Notifications.Count:N0}  in {Duration}ms.", 
+            notificationsGenerated, timer.ElapsedMilliseconds);
     }
 
     public async Task WhiskeyAdded(Whisky whisky)
     {
+        _logger.LogInformation("Generating notifications for Whisky Added");
+
         var subject = "[Whisky API] New Whisky Added";
         var body = @$"Hey there!  We thought you'd like to know a new whisky has been added!  
                       It is named {whisky.Name} and is from the {whisky.RegionStyle} region.";
+        var notificationsGenerated = 0;
+        var timer = Stopwatch.StartNew();
         foreach (var notification in
-                        _notifications.Where(p => p.NotificationType == NotificationType.NEW_WHISKY ||
-                            (p.NotificationType == NotificationType.NEW_WHISKY_IN_REGION &&
-                                                    p.Region.Equals(whisky.RegionStyle, StringComparison.OrdinalIgnoreCase))))
+                 _notifications.Where(p => p.NotificationType == NotificationType.NEW_WHISKY ||
+                                           (p.NotificationType == NotificationType.NEW_WHISKY_IN_REGION &&
+                                            p.Region.Equals(whisky.RegionStyle, StringComparison.OrdinalIgnoreCase))))
         {
             var newOutgoingMessage = new OutgoingEmailMessage()
             {
@@ -73,6 +87,11 @@ public class EmailNotificationService : INotificationService
 
             // notify!
             await _sendEmailService.QueueEmail(newOutgoingMessage);
+            notificationsGenerated++;
         }
+
+        timer.Stop();
+        _logger.LogInformation("Completed generating {Notifications.Count:N0} notifications in {Duration}ms.",
+            notificationsGenerated, timer.ElapsedMilliseconds);
     }
 }

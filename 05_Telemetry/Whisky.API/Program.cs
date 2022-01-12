@@ -1,11 +1,22 @@
 using System.Reflection;
+using Loupe.Agent.AspNetCore;
+using Loupe.Agent.Core.Services;
+using Loupe.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.AddLoupe();
+
 // Add services to the container.
+builder.Services.AddLoupe(config =>
+{
+    config.Publisher.ProductName = "Whisky";
+    config.Publisher.ApplicationName = "API";
+}).AddAspNetCoreDiagnostics();
 
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -17,7 +28,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var whiskyPath = Path.Combine(Directory.GetCurrentDirectory(), "whisky.csv");
-builder.Services.AddTransient<IWhiskyRepository, CsvWhiskyRepository>(p => new CsvWhiskyRepository(whiskyPath));
+builder.Services.AddTransient<IWhiskyRepository, CsvWhiskyRepository>(p => new CsvWhiskyRepository(whiskyPath, p.GetService<ILogger<IWhiskyRepository>>()));
 
 builder 
     .Services
