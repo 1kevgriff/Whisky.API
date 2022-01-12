@@ -2,20 +2,25 @@ using System.Globalization;
 using System.Text.Json;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Microsoft.Extensions.Logging;
 
 public class CsvWhiskyRepository : IWhiskyRepository
 {
     private List<Whisky> _whisky = new List<Whisky>();
     private readonly string _csvPath;
+    private readonly ILogger<IWhiskyRepository> _logger;
 
-    public CsvWhiskyRepository(string csvPath)
+    public CsvWhiskyRepository(string csvPath, ILogger<IWhiskyRepository> logger)
     {
         _csvPath = csvPath;
+        _logger = logger;
         _whisky = ReadWhiskyFromCsv(csvPath).ToList();
     }
 
     private IEnumerable<Whisky> ReadWhiskyFromCsv(string csvPath)
     {
+        using var scope = _logger.BeginFileScope("Whisky", csvPath);
+
         using var streamReader = new StreamReader(csvPath);
 
         using CsvReader csvReader = new CsvReader(streamReader, new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -42,6 +47,9 @@ public class CsvWhiskyRepository : IWhiskyRepository
         foreach (var w in whiskyList)
         {
             var whiskyRatingJsonPath = Path.Combine(ratingFolder, $"{w.Id}.json");
+
+            using var scope = _logger.BeginFileScope("Whisky-Ratings", whiskyRatingJsonPath);
+
             if (File.Exists(whiskyRatingJsonPath))
             {
                 var whiskyRatingJson = File.ReadAllText(whiskyRatingJsonPath);
@@ -52,6 +60,8 @@ public class CsvWhiskyRepository : IWhiskyRepository
 
     private void SaveWhiskyListToCsv(string csvPath)
     {
+        using var scope = _logger.BeginFileScope("Whisky", csvPath);
+
         using var streamWriter = new StreamWriter(csvPath);
 
         using CsvWriter csvWriter = new CsvWriter(streamWriter, new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -75,11 +85,15 @@ public class CsvWhiskyRepository : IWhiskyRepository
     public Whisky Add(Whisky whisky)
     {
         whisky.Id = Guid.NewGuid();
+        using (_logger.BeginWhiskyScope(whisky.Id))
+        {
+            _logger.LogInformation("Adding Whisky {WhiskyName}", whisky.Name);
 
-        _whisky.Add(whisky);
-        SaveWhiskyListToCsv(_csvPath);
-        
-        return whisky;
+            _whisky.Add(whisky);
+            SaveWhiskyListToCsv(_csvPath);
+
+            return whisky;
+        }
     }
 
     public void Delete(Guid id)
@@ -104,6 +118,9 @@ public class CsvWhiskyRepository : IWhiskyRepository
 
     public void Update(Whisky whisky)
     {
+        _logger.LogInformation("Updating Whisky {Whisky.Name}.\r\n" +
+                               "Region / Style: {Whisky.Region}", whisky.Name, whisky.RegionStyle);
+
         var whiskyToUpdate = _whisky.Find(p => p.Id == whisky.Id);
         if (whiskyToUpdate == null) throw new KeyNotFoundException($"Whisky not found: {whisky.Name}");
         whiskyToUpdate.RegionStyle = whisky.RegionStyle;
@@ -113,6 +130,9 @@ public class CsvWhiskyRepository : IWhiskyRepository
 
     public void AddRating(Guid id, short stars, string message)
     {
+        _logger.LogInformation("Adding {Whisky-Rating.Stars} to Whisky.\r\n" +
+                               "Message: {Whisky-Rating.Message}", stars, message);
+
         var whisky = _whisky.Find(p => p.Id.Equals(id));
         if (whisky == null) throw new KeyNotFoundException($"Whisky not found: {id}");
 

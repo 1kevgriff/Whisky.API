@@ -1,4 +1,1 @@
-[
-  { "Stars": 2, "Message": "One thumbs up" }, { "Stars": 1, "Message": "It was a great experience." },
-  { "Stars": 2, "Message": "Aight." }
-]
+[{"Stars":2,"Message":"One thumbs up"},{"Stars":1,"Message":"It was a great experience."},{"Stars":2,"Message":"Aight."}]
